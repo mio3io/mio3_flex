@@ -1,5 +1,4 @@
 from .modules import curve_edges
-from .modules import normal_symmetrize
 from .modules import select_edge_loop
 from .modules import select_trait
 from .modules import edge_length
@@ -18,7 +17,6 @@ module_list = [
     select_edge_loop,
     select_trait,
     curve_edges,
-    normal_symmetrize,
     edge_length,
     group_merge,
     origin,
