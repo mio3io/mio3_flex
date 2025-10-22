@@ -1,6 +1,6 @@
 import bpy
 from bpy.types import Panel, Menu, PropertyGroup
-from bpy.props import BoolProperty, IntProperty, PointerProperty
+from bpy.props import BoolProperty, FloatProperty, IntProperty, PointerProperty
 from .icons import icons
 from .utils import is_local_obj
 
@@ -77,10 +77,14 @@ class MIO3_PT_curve_edge_loop(Panel):
         split.label(text="Control Points", icon="HANDLE_ALIGNED")
         split.prop(context.window_manager.mio3ce, "control_num", text="")
 
+        split = col.split(factor=0.55, align=True)
+        split.label(text="Roundness", icon="SMOOTHCURVE")
+        split.prop(context.window_manager.mio3ce, "clamp", text="")
 
 class MIO3_PG_curve_edge_loop(PropertyGroup):
     control_num: IntProperty(name="Control Points", default=3, min=2, max=30)
-    hide_spline: BoolProperty(name="Hide Cueve", default=False)
+    clamp: FloatProperty(name="Clamp", default=1.2, min=0, max=2, step=5)
+    hide_spline: BoolProperty(name="Hide Curve", default=False)
 
 
 class MIO3_MT_mesh_tools(Menu):
@@ -91,9 +95,8 @@ class MIO3_MT_mesh_tools(Menu):
         layout.operator("mesh.mio3_group_merg")
         layout.operator("mesh.mio3_edge_length")
         layout.separator(factor=0.5)
-        layout.operator("mesh.mio3_normal_symmetrize", icon="MOD_MIRROR")
-        layout.separator(factor=0.5)
         layout.operator("mesh.mio3_origin_to_active", icon_value=icons.origin_to_active)
+        layout.operator("mesh.mio3_select_nearby")
 
 
 classes = [

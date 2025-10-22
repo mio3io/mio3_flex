@@ -4,7 +4,7 @@ import blf
 import bmesh
 from mathutils import Vector, kdtree
 from bpy.types import Operator, SpaceView3D
-from bpy.props import IntProperty
+from bpy.props import FloatProperty, IntProperty
 from gpu_extras.batch import batch_for_shader
 from bpy_extras import view3d_utils
 from bpy.app.translations import pgettext_iface as tt_iface
@@ -24,7 +24,7 @@ ver4_5 = bpy.app.version >= (4, 5, 0)
 
 text_lines = [
     "🐻Tips",
-    "[Ctrl+Wheel][Shift+Wheel] Change Control Points",
+    "[Ctrl+Wheel] Change Control Points [Shift+Wheel] Change Curve Strength",
     "[Ctrl+Click] Add or delete [Del] Delete Control Points",
     "[R] Reset Deform [M] Mirror toggle [H] Hide Spline",
 ]
@@ -42,6 +42,7 @@ class MESH_OT_mio3_curve_edges_base(Operator):
         context.window_manager.mio3ce.control_num = self.points
 
     points: IntProperty(name="Points", default=2, min=2, max=30, update=update_points, options={"HIDDEN"})
+    clamp: FloatProperty(name="Clamp", default=1, min=-5, max=5, options={"HIDDEN"})
 
     _matrix_world = None
 
@@ -134,7 +135,7 @@ class MESH_OT_mio3_curve_edges_base(Operator):
             is_closed = is_closed_loop(ordered_verts)
             world_co = [world_matrix @ v.co for v in ordered_verts]
             control_points = calc_control_points(world_co, self.points, is_closed)
-            spline_points = calc_spline_points(control_points, self._segments, is_closed)
+            spline_points = calc_spline_points(control_points, self._segments, is_closed, self.clamp)
             vertex_params = calc_vertex_params(world_co, spline_points, is_closed)
             spline_datas.append(
                 {
@@ -262,7 +263,7 @@ class MESH_OT_mio3_curve_edges_base(Operator):
 
         for s_idx in updated_splines:
             sd = self._spline_datas[s_idx]
-            sd["spline_points"] = calc_spline_points(sd["control_points"], self._segments, sd["is_closed"])
+            sd["spline_points"] = calc_spline_points(sd["control_points"], self._segments, sd["is_closed"], self.clamp)
 
         self.update_vertices(context)
 
@@ -282,7 +283,7 @@ class MESH_OT_mio3_curve_edges_base(Operator):
             is_closed = spline["is_closed"]
             world_co = [world_matrix @ bm.verts[i].co for i in spline["vert_indices"]]
             spline["control_points"] = calc_control_points(world_co, new_num, is_closed)
-            spline["spline_points"] = calc_spline_points(spline["control_points"], self._segments, is_closed)
+            spline["spline_points"] = calc_spline_points(spline["control_points"], self._segments, is_closed, self.clamp)
             spline["vertex_params"] = calc_vertex_params(world_co, spline["spline_points"], is_closed)
 
         self.create_spline_mirror_map(self._spline_datas)
@@ -332,7 +333,7 @@ class MESH_OT_mio3_curve_edges_base(Operator):
             if spline_idx_m == spline_idx:
                 insert(control_points, p_mirror, is_closed)
 
-        spline["spline_points"] = calc_spline_points(control_points, self._segments, is_closed)
+        spline["spline_points"] = calc_spline_points(control_points, self._segments, is_closed, self.clamp)
 
         new_idx = None
         for idx, pt in enumerate(control_points):
@@ -375,7 +376,7 @@ class MESH_OT_mio3_curve_edges_base(Operator):
                     control_points.pop(point_idx)
 
         for spline in self._spline_datas:
-            spline["spline_points"] = calc_spline_points(spline["control_points"], self._segments, spline["is_closed"])
+            spline["spline_points"] = calc_spline_points(spline["control_points"], self._segments, spline["is_closed"], self.clamp)
 
         self._selected_points = []
         self._active_point_index = -1
@@ -406,7 +407,7 @@ class MESH_OT_mio3_curve_edges_base(Operator):
             vert_indices = spline["vert_indices"]
             is_closed = spline["is_closed"]
             spline["control_points"] = calc_control_points(world_co, control_num, is_closed)
-            spline["spline_points"] = calc_spline_points(spline["control_points"], self._segments, is_closed)
+            spline["spline_points"] = calc_spline_points(spline["control_points"], self._segments, is_closed, self.clamp)
             spline["vertex_params"] = calc_vertex_params(world_co, spline["spline_points"], is_closed)
 
             for i, vert_index in enumerate(vert_indices):
@@ -421,6 +422,19 @@ class MESH_OT_mio3_curve_edges_base(Operator):
                         bm.verts[mirror_idx].co = Vector((-original.x, original.y, original.z))
 
         bmesh.update_edit_mesh(obj.data)
+        redraw_3d_views(context)
+
+    def refresh_deform(self, context):
+        """スプラインを更新"""
+        obj = context.active_object
+        for spline in self._spline_datas:
+            local_co = spline["local_co"]
+            world_co = [self._matrix_world @ co for co in local_co]
+            is_closed = spline["is_closed"]
+            spline["spline_points"] = calc_spline_points(spline["control_points"], self._segments, is_closed, self.clamp)
+            spline["vertex_params"] = calc_vertex_params(world_co, spline["spline_points"], is_closed)
+
+        self.update_vertices(context)
         redraw_3d_views(context)
 
     def select_points_rect(self, context, shift=False):
@@ -624,6 +638,7 @@ class MESH_OT_mio3_curve_edges_base(Operator):
 
         self._x_mirror = obj.data.use_mirror_x
         self.points = context.window_manager.mio3ce.control_num
+        self.clamp = context.window_manager.mio3ce.clamp
         context.window_manager.mio3ce.hide_spline = False
         self._text_lines = get_guide_lines()
 
@@ -740,13 +755,22 @@ class MESH_OT_mio3_curve_edges_base(Operator):
         elif event.type in {"WHEELUPMOUSE", "WHEELDOWNMOUSE"} and (event.ctrl or event.shift):
             if self._is_drag_mode or self._is_grab_mode:
                 self.end_move_mode("ホイール時のキャンセル")
+
+            # clumpの数値を変更0～2
+            if event.shift:
+                if event.type == "WHEELUPMOUSE":
+                    self.clamp = min(2.0, self.clamp + 0.2)
+                else:
+                    self.clamp = max(0.0, self.clamp - 0.2)
+                context.window_manager.mio3ce.clamp = self.clamp
+                self.refresh_deform(context)
+                redraw_3d_views(context)
+                return {"RUNNING_MODAL"}
             if event.type == "WHEELUPMOUSE":
                 new_num = min(30, self.points + 1)
             else:
                 new_num = max(3, self.points - 1)
             if new_num != self.points:
-                if event.shift:
-                    self.reset_deform(context)
                 self.rebuild_spline(context, new_num)
             return {"RUNNING_MODAL"}
 
@@ -815,7 +839,7 @@ class MESH_OT_mio3_curve_edges_base(Operator):
             if i < len(self._spline_datas):
                 self._spline_datas[i]["control_points"] = control_points.copy()
                 self._spline_datas[i]["spline_points"] = calc_spline_points(
-                    control_points, self._segments, self._spline_datas[i]["is_closed"]
+                    control_points, self._segments, self._spline_datas[i]["is_closed"], self.clamp
                 ).copy()
         self.update_vertices(context)
 

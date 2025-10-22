@@ -179,7 +179,7 @@ def calc_control_points(vertices, control_num, is_closed=False):
     return control_points
 
 
-def calc_spline_points(control_points, segments=10, is_closed=False):
+def calc_spline_points(control_points, segments=10, is_closed=False, clamp=1.2):
     """スプラインポイントを計算する"""
     if len(control_points) < 2:
         return control_points.copy()
@@ -196,7 +196,8 @@ def calc_spline_points(control_points, segments=10, is_closed=False):
     spline_points = []
     ts = np.linspace(0.0, 1.0, segments + 1)
 
-    tension = -0.25  # 丸み
+    tension = -1  # 張り
+    # clamp = 1.2  # 接線制限（大きいほど丸くなる）
     for i in range(1, len(cp) - 2):
         p0, p1, p2, p3 = cp[i - 1], cp[i], cp[i + 1], cp[i + 2]
 
@@ -205,13 +206,13 @@ def calc_spline_points(control_points, segments=10, is_closed=False):
 
         d1 = np.linalg.norm(p2 - p1)
         d0 = np.linalg.norm(p1 - p0)
-        max_len1 = min(d0, d1)  # clamp * min(d0, d1)
+        max_len1 = clamp * min(d0, d1)  # clamp * min(d0, d1)
         len_m1 = np.linalg.norm(m1)
         if len_m1 > max_len1 and len_m1 > 0:
             m1 *= max_len1 / len_m1
 
         d2 = np.linalg.norm(p3 - p2)
-        max_len2 = min(d1, d2)  # clamp * min(d1, d2)
+        max_len2 = clamp * min(d1, d2)  # clamp * min(d1, d2)
         len_m2 = np.linalg.norm(m2)
         if len_m2 > max_len2 and len_m2 > 0:
             m2 *= max_len2 / len_m2
