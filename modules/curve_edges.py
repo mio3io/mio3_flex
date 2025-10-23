@@ -22,7 +22,7 @@ from ..globals import get_preferences
 
 ver4_5 = bpy.app.version >= (4, 5, 0)
 
-text_lines = [
+guide_lines = [
     "🐻Tips",
     "[Ctrl+Wheel] Change Control Points [Shift+Wheel] Change Curve Strength",
     "[Ctrl+Click] Add or delete [Del] Delete Control Points",
@@ -31,7 +31,7 @@ text_lines = [
 
 
 def get_guide_lines(base_x=50, base_y=50, line_height=26):
-    return [(base_x, base_y + i * line_height, tt_iface(text)) for i, text in enumerate(reversed(text_lines))]
+    return [(base_x, base_y + i * line_height, tt_iface(text)) for i, text in enumerate(reversed(guide_lines))]
 
 
 class MESH_OT_mio3_curve_edges_base(Operator):
@@ -69,14 +69,7 @@ class MESH_OT_mio3_curve_edges_base(Operator):
     _skip_finish = False  # 確定をスキップするフラグ
     _store_points = []
 
-    _col_point_default = (0.36, 0.79, 1.00, 1.0)
-    _col_point_selected = (0.8, 0.8, 0.8, 1.0)
-    _col_point_active = (0.8, 0.8, 0.8, 1.0)
-    _col_spline_default = (0.0, 0.7, 1.0, 1.0)  # デフォルトのスプライン
-    _col_spline_active = (0.0, 0.7, 1.0, 1.0)  # アクティブなスプライン
-    _point_size_default = 8
-    _point_size_selected = 10
-    _point_size_active = 10
+    _pref = None
 
     _handle_3d = None
     _handle_2d = None
@@ -554,9 +547,9 @@ class MESH_OT_mio3_curve_edges_base(Operator):
         if props.hide_spline:
             return
 
-        p_default = self._point_size_default
-        p_selected = self._point_size_selected
-        p_active = self._point_size_active
+        p_default = self._pref.point_size_default
+        p_selected = self._pref.point_size_selected
+        p_active = self._pref.point_size_active
 
         if ver4_5:
             spline_shader = gpu.shader.from_builtin("POLYLINE_UNIFORM_COLOR")
@@ -571,7 +564,7 @@ class MESH_OT_mio3_curve_edges_base(Operator):
         for i, spline in enumerate(self._spline_datas):
             is_active_spline = i == self._active_spline_index
             # スプラインの描画
-            spline_color = self._col_spline_active if is_active_spline else self._col_spline_default
+            spline_color = self._pref.col_spline_active if is_active_spline else self._pref.col_spline_default
             if spline["is_closed"]:
                 batch = batch_for_shader(spline_shader, "LINE_LOOP", {"pos": spline["spline_points"]})
             else:
@@ -584,11 +577,11 @@ class MESH_OT_mio3_curve_edges_base(Operator):
                 is_active = j == self._active_point_index and is_active_spline
                 is_selected = (i, j) in self._selected_points
                 if is_active:
-                    color = self._col_point_active
+                    color = self._pref.col_point_active
                 elif is_selected:
-                    color = self._col_point_selected
+                    color = self._pref.col_point_selected
                 else:
-                    color = self._col_point_default
+                    color = self._pref.col_point_default
                 points_batch = batch_for_shader(points_shader, "POINTS", {"pos": [point]})
                 gpu.state.point_size_set(p_active if is_active else (p_selected if is_selected else p_default))
                 points_shader.bind()
@@ -628,15 +621,7 @@ class MESH_OT_mio3_curve_edges_base(Operator):
         cls.remove_handler()
         obj = context.active_object
 
-        self._col_point_default = pref.col_point_default
-        self._col_point_selected = pref.col_point_selected
-        self._col_point_active = pref.col_point_active
-        self._col_spline_default = pref.col_spline_default
-        self._col_spline_active = pref.col_spline_active
-        self._point_size_default = pref.point_size_default
-        self._point_size_selected = pref.point_size_selected
-        self._point_size_active = pref.point_size_active
-
+        self._pref = pref
         self._matrix_world = obj.matrix_world
 
         self._x_mirror = obj.data.use_mirror_x
