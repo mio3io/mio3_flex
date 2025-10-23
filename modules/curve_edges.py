@@ -546,6 +546,9 @@ class MESH_OT_mio3_curve_edges_base(Operator):
         redraw_3d_views(context)
         return {"CANCELLED"}
 
+    def execute(self, context):
+        return {'FINISHED'}
+
     @staticmethod
     def draw_3d(self, context, props):
         if props.hide_spline:
