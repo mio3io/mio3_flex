@@ -24,7 +24,7 @@ ver4_5 = bpy.app.version >= (4, 5, 0)
 
 guide_lines = [
     "🐻Tips",
-    "[Ctrl+Wheel] Change Control Points [Shift+Wheel] Change Curve Strength",
+    "[Ctrl+Wheel] Control Points [Ctrl+Shift+Wheel] Roundness",
     "[Ctrl+Click] Add or delete [Del] Delete Control Points",
     "[R] Reset Deform [M] Mirror toggle [H] Hide Spline",
 ]
@@ -740,12 +740,12 @@ class MESH_OT_mio3_curve_edges_base(Operator):
                 self.store_points()
 
         # ホイール：制御点の数を変更
-        elif event.type in {"WHEELUPMOUSE", "WHEELDOWNMOUSE"} and (event.ctrl or event.shift):
+        elif event.type in {"WHEELUPMOUSE", "WHEELDOWNMOUSE"} and (event.ctrl):
             if self._is_drag_mode or self._is_grab_mode:
                 self.end_move_mode("ホイール時のキャンセル")
 
             # clumpの数値を変更0～2
-            if event.shift:
+            if event.shift and event.ctrl:
                 if event.type == "WHEELUPMOUSE":
                     self.clamp = min(2.0, self.clamp + 0.2)
                 else:

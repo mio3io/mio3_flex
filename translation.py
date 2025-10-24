@@ -48,7 +48,7 @@ translation_dict = {
         ("*", "🐻Tips"): "🐻Tips",
         ("*", "[Click] Confirm"): "[Click] 確定",
         ("*", "[R] Reset Deform [M] Mirror toggle [H] Hide Spline"): "[R] 変形リセット [M] ミラー切り替え [H] スプライン非表示",
-        ("*", "[Ctrl+Wheel] Change Control Points [Shift+Wheel] Change Curve Strength"): "[Ctrl+ホイール]ポイント数変更 [Shift+ホイール]曲線の強さ変更",
+        ("*", "[Ctrl+Wheel] Control Points [Ctrl+Shift+Wheel] Roundness"): "[Ctrl+ホイール]ポイント数変更 [Ctrl+Shift+ホイール]曲線の強さ変更",
         ("*", "[Ctrl+Click] Add or delete [Del] Delete Control Points"): "[Ctrl+クリック]追加or削除 [Del]制御点を削除",
 
     }

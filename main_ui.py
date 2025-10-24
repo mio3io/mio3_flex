@@ -82,8 +82,8 @@ class MIO3_PT_curve_edge_loop(Panel):
         split.prop(context.window_manager.mio3ce, "clamp", text="")
 
 class MIO3_PG_curve_edge_loop(PropertyGroup):
-    control_num: IntProperty(name="Control Points", default=3, min=2, max=30)
-    clamp: FloatProperty(name="Clamp", default=1.2, min=0, max=2, step=5)
+    control_num: IntProperty(name="Control Points", description="[Ctrl] + Wheel", default=3, min=2, max=30)
+    clamp: FloatProperty(name="Clamp", description="[Ctrl] + [Shift] + Wheel", default=1.2, min=0, max=2, step=5)
     hide_spline: BoolProperty(name="Hide Curve", default=False)
 
 
