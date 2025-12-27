@@ -1,5 +1,6 @@
 import numpy as np
 from mathutils import Vector
+from collections import deque
 
 # 押したときにデフォの処理をするキー "WHEELINMOUSE", "WHEELOUTMOUSE",
 PASS_THROUGH_KEY = {
@@ -9,18 +10,14 @@ PASS_THROUGH_KEY = {
 } # fmt: skip
 
 
-def redraw_3d_views(context):
-    for area in context.screen.areas:
-        if area.type == "VIEW_3D":
-            area.tag_redraw()
-
-
 def is_closed_loop(vertices):
     first_vert = vertices[0]
     last_vert = vertices[-1]
     for edge in last_vert.link_edges:
         if edge.other_vert(last_vert) == first_vert:
             return True
+
+    return False
 
 
 def find_edge_loops(selected_verts):
@@ -29,29 +26,24 @@ def find_edge_loops(selected_verts):
     unprocessed = set(selected_verts)
 
     while unprocessed:
-        start_vert = next(iter(unprocessed))
+        start_vert = min(unprocessed, key=lambda v: v.index)
         loop = []
-        queue = [start_vert]
-        visited = set()
+        queue = deque([start_vert])
+        unprocessed.remove(start_vert)
 
         while queue:
-            vert = queue.pop(0)
-            if vert in visited:
-                continue
-
-            visited.add(vert)
+            vert = queue.popleft()
             loop.append(vert)
             for edge in vert.link_edges:
-                if edge.select:
-                    other_vert = edge.other_vert(vert)
-                    if other_vert in unprocessed and other_vert not in visited:
-                        queue.append(other_vert)
+                if not edge.select:
+                    continue
+                other_vert = edge.other_vert(vert)
+                if other_vert in unprocessed:
+                    unprocessed.remove(other_vert)
+                    queue.append(other_vert)
 
-        if loop and len(loop) >= 2:
+        if len(loop) >= 2:
             loops.append(loop)
-            unprocessed -= set(loop)
-        else:
-            unprocessed.remove(start_vert)
 
     return loops
 
