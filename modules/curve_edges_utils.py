@@ -112,8 +112,8 @@ def calc_vertex_params(vertices, spline_points, is_closed=False):
     return parameters
 
 
-def calc_control_points(vertices, control_num, is_closed=False):
-    """制御点の均等な位置を取得する"""
+def calc_control_points(vertices, control_num, is_closed=False, use_density=True):
+    """制御点位置を計算する"""
     vertices = np.asarray(vertices, dtype=np.float64)
 
     if is_closed:
@@ -132,36 +132,66 @@ def calc_control_points(vertices, control_num, is_closed=False):
     if total_length <= 0:
         return []
 
+    if use_density and len(edge_lengths) > 0:
+        density_bias = 0.8  # 優先 0: 長さ, 1: 密度
+        density_power = 1
+        mean_length = total_length / len(edge_lengths)
+        adjusted_lengths = []
+        for length in edge_lengths:
+            if length <= 0:
+                density_scale = 4.0
+            else:
+                normalized = mean_length / length
+                density_scale = float(np.clip(normalized ** density_power, 0.3, 4.0))
+
+            blended = (1.0 - density_bias) + (density_bias * density_scale)
+            adjusted_lengths.append(length * blended)
+
+        adjusted_total = sum(adjusted_lengths)
+        if adjusted_total <= 0:
+            return []
+    else:
+        adjusted_lengths = edge_lengths[:]
+        adjusted_total = total_length
+
     def lerp_point(i, ratio):
         v1 = vertices[i]
         v2 = vertices[(i + 1) % len(vertices)] if is_closed else vertices[i + 1]
         return tuple((1 - ratio) * v1 + ratio * v2)
 
     if control_num == 1:
-        steps = [total_length / 2]
+        steps = [adjusted_total / 2]
     else:
         if is_closed:
-            step = total_length / control_num
+            step = adjusted_total / control_num
             steps = [step * i for i in range(control_num)]
         else:
-            step = total_length / (control_num + 1)
+            step = adjusted_total / (control_num + 1)
             steps = [step * (i + 1) for i in range(control_num)]
 
     control_points = []
     if not is_closed:
         control_points.append(tuple(vertices[0]))
 
-    current_distance = 0
     segment_index = 0
+    adjusted_distance = 0.0
 
     for distance in steps:
-        while segment_index < len(edge_lengths) and current_distance + edge_lengths[segment_index] < distance:
-            current_distance += edge_lengths[segment_index]
+        while segment_index < len(adjusted_lengths):
+            segment_length = adjusted_lengths[segment_index]
+            if segment_length <= 1e-9:
+                segment_index += 1
+                continue
+
+            if adjusted_distance + segment_length >= distance:
+                break
+
+            adjusted_distance += segment_length
             segment_index += 1
 
-        if segment_index < len(edge_lengths):
-            local_distance = distance - current_distance
-            ratio = local_distance / edge_lengths[segment_index]
+        if segment_index < len(edge_lengths) and adjusted_lengths[segment_index] > 0:
+            local_distance = distance - adjusted_distance
+            ratio = max(0.0, min(1.0, local_distance / adjusted_lengths[segment_index]))
             vertex_index = segment_index % len(vertices)
             control_points.append(lerp_point(vertex_index, ratio))
 

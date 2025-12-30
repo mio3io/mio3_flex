@@ -25,7 +25,7 @@ ver4_5 = bpy.app.version >= (4, 5, 0)
 guide_lines = [
     "🐻Tips",
     "[Shift+Wheel] Control Points [Ctrl+Click] Add or Delete [↑↓] Roundness",
-    "[R] Reset Deform [M] Mirror Toggle [H] Hide Spline",
+    "[R] Reset Deform [M] Mirror Toggle [H] Hide Path",
 ]
 
 
@@ -125,7 +125,7 @@ class MESH_OT_mio3_curve_edges_base(Operator):
 
             is_closed = is_closed_loop(ordered_verts)
             world_co = [world_matrix @ v.co for v in ordered_verts]
-            control_points = calc_control_points(world_co, self.points, is_closed)
+            control_points = calc_control_points(world_co, self.points, is_closed, self._pref.use_density)
             spline_points = calc_spline_points(control_points, self._segments, is_closed, self.clamp)
             vertex_params = calc_vertex_params(world_co, spline_points, is_closed)
             spline_datas.append(
@@ -277,7 +277,7 @@ class MESH_OT_mio3_curve_edges_base(Operator):
         for spline_idx, spline in enumerate(self._spline_datas):
             is_closed = spline["is_closed"]
             world_co = [world_matrix @ bm.verts[i].co for i in spline["vert_indices"]]
-            spline["control_points"] = calc_control_points(world_co, new_num, is_closed)
+            spline["control_points"] = calc_control_points(world_co, new_num, is_closed, self._pref.use_density)
             spline["spline_points"] = calc_spline_points(
                 spline["control_points"], self._segments, is_closed, self.clamp
             )
@@ -405,7 +405,7 @@ class MESH_OT_mio3_curve_edges_base(Operator):
             world_co = [world_matrix @ co for co in local_co]
             vert_indices = spline["vert_indices"]
             is_closed = spline["is_closed"]
-            spline["control_points"] = calc_control_points(world_co, control_num, is_closed)
+            spline["control_points"] = calc_control_points(world_co, control_num, is_closed, self._pref.use_density)
             spline["spline_points"] = calc_spline_points(
                 spline["control_points"], self._segments, is_closed, self.clamp
             )
@@ -876,7 +876,7 @@ class MESH_OT_mio3_curve_edges_base(Operator):
 class MESH_OT_mio3_curve_edges(MESH_OT_mio3_curve_edges_base):
     bl_idname = "mesh.mio3_curve_edges"
     bl_label = "Path Deform"
-    bl_description = "Deforms an edge loop with a spline curve"
+    bl_description = "Deforms an edge loop with a curve"
 
 
 class MESH_OT_mio3_curve_edges_quick(MESH_OT_mio3_curve_edges_base):
@@ -884,9 +884,15 @@ class MESH_OT_mio3_curve_edges_quick(MESH_OT_mio3_curve_edges_base):
     bl_label = "Path Deform"
     bl_description = "Omit the option for instant transformation"
 
-    iterations: IntProperty(name="Iterations", default=3, min=1, max=10)
+    iterations: IntProperty(name="Iterations", default=1, min=1, max=10)
+
+    def update_points(self, context):
+        context.window_manager.mio3ce.control_num = self.points
+
+    points: IntProperty(name="Points", default=2, min=2, max=30, update=update_points)
 
     def invoke(self, context, event):
+        self._pref = get_preferences()
         return self.execute(context)
 
     def execute(self, context):

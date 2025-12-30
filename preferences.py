@@ -1,6 +1,6 @@
 import bpy
 from bpy.types import AddonPreferences
-from bpy.props import FloatVectorProperty, IntProperty, StringProperty
+from bpy.props import BoolProperty, FloatVectorProperty, IntProperty, StringProperty
 from . import main_ui
 
 
@@ -14,6 +14,12 @@ class PREFERENCE_mio3me(AddonPreferences):
         name="Category",
         default="Mio3",
         update=update_category,
+    )
+
+    use_density: BoolProperty(
+        name="Auto Density",
+        description="Automatically adjust control point distribution based on edge density",
+        default=True,
     )
 
     col_spline_default: FloatVectorProperty(

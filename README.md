@@ -1,7 +1,6 @@
 # Mio3 Flex (EN)
 
-A Blender add-on that smooths edge loops using splines.
-X mirror operation, axis restrictions, and number of control points can be changed.
+A Blender add-on that lets you reshape edge loops into freeform curves by manipulating a path.
 
 ## Download
 
@@ -14,26 +13,27 @@ https://addon.mio3io.com/
 ## How to use
 
 Select the edge loop you want to edit and click "Mio3 Flow" in the sidebar → "Path Deform".
+If multiple edge loops are selected, an independent path is created for each one.
 
 ## Controls
 
-- Click on empty space / Right-click / Enter / Tab: Confirm deformation  
-- Drag on empty space / Shift + click a control point: Multi-select  
-- Drag a control point: Move the control point  
-- G: Move selected control points  
-- Ctrl + click on the spline: Add or remove a control point  
-- Del: Delete selected control points  
-- Shift + mouse wheel: Change the number of control points  
-- ↑ / ↓: Adjust curve strength  
-- X / Y / Z: Lock the movement axis  
-- M: Toggle mirror mode  
-- R: Reset deformation  
-- H: Hide the spline  
-- ESC: Cancel deformation
+-   Click on empty space / Right-click / Enter / Tab: Confirm deformation
+-   Drag on empty space / Shift + click a control point: Multi-select
+-   Drag a control point: Move the control point
+-   G: Move selected control points
+-   Ctrl + click on the spline: Add or remove a control point
+-   Del: Delete selected control points
+-   Shift + mouse wheel: Change the number of control points
+-   ↑ / ↓: Adjust curve strength
+-   X / Y / Z: Lock the movement axis
+-   M: Toggle mirror mode
+-   R: Reset deformation
+-   H: Hide the spline
+-   ESC: Cancel deformation
 
 # Mio3 Flex (JA)
 
-スプラインを使用してエッジループをスムーズにするBlenderアドオン。Xミラー操作、軸制限、制御点数の変更などが可能です。
+パスを操作してエッジループの形を自由な曲線に整えられる Blender アドオン。
 
 ## ダウンロード
 
@@ -41,11 +41,12 @@ https://addon.mio3io.com/
 
 ## 場所
 
-3D View >  SideBar > Mio3
+3D View > SideBar > Mio3
 
 ## 使い方
 
-編集したいエッジループを選択してサイドバー「Mio3 Flow」→「パスで変形」をクリック
+編集したいエッジループを選択してサイドバー「Mio3 Flow」→「パスで変形」をクリックします。
+エッジループを複数選択している場合はそれぞれ独立したパスが作成されます。
 
 ### 操作方法
 
