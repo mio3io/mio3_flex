@@ -1,18 +1,19 @@
 # Mio3 Flex (EN)
 
 A Blender add-on that smooths edge loops using splines.
+X mirror operation, axis restrictions, and number of control points can be changed.
 
 ## Download
 
 https://addon.mio3io.com/
 
-## Compatibility
-
-Blender version 4.2 or later
-
 ## Location
 
 3D View > Sidebar > Mio3
+
+## How to use
+
+Select the edge loop you want to edit and click "Mio3 Flow" in the sidebar → "Path Deform".
 
 ## Controls
 
@@ -32,19 +33,19 @@ Blender version 4.2 or later
 
 # Mio3 Flex (JA)
 
-スプラインを使用してエッジループをスムーズにするBlenderアドオン
+スプラインを使用してエッジループをスムーズにするBlenderアドオン。Xミラー操作、軸制限、制御点数の変更などが可能です。
 
 ## ダウンロード
 
 https://addon.mio3io.com/
 
-## 互換性
-
-Blender Ver 4.2 以降
-
 ## 場所
 
-3D View >  SideBar > Mio3  
+3D View >  SideBar > Mio3
+
+## 使い方
+
+編集したいエッジループを選択してサイドバー「Mio3 Flow」→「パスで変形」をクリック
 
 ### 操作方法
 

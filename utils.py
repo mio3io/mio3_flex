@@ -38,3 +38,4 @@ def redraw_3d_views(context):
 
 def linear_rgb_to_srgb(rgb):
     return Color(rgb).from_scene_linear_to_srgb()
+

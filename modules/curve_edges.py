@@ -43,8 +43,6 @@ class MESH_OT_mio3_curve_edges_base(Operator):
     points: IntProperty(name="Points", default=2, min=2, max=30, update=update_points, options={"HIDDEN"})
     clamp: FloatProperty(name="Clamp", default=1, min=-5, max=5, options={"HIDDEN"})
 
-    _matrix_world = None
-
     _segments = 10  # 分割数
     _hit_radius = 16  # クリックしたときのヒット半径
 
@@ -69,6 +67,7 @@ class MESH_OT_mio3_curve_edges_base(Operator):
     _store_points = []
 
     _pref = None
+    _matrix_world = None
 
     _handle_3d = None
     _handle_2d = None

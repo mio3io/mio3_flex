@@ -16,6 +16,12 @@ class MIO3_PT_flex(Panel):
         obj = context.active_object
         return is_local_obj(obj) and obj.mode == "EDIT"
 
+    def draw_header_preset(self, context):
+        layout = self.layout
+        layout.emboss = "NONE"
+        layout.popover("MIO3_PT_flex_options_popover", text="")
+        layout.separator(factor=2.2)
+
     def draw(self, context):
         layout = self.layout
         col = layout.column(align=False)
@@ -30,16 +36,28 @@ class MIO3_PT_flex(Panel):
         split.label(text="Roundness", icon="SMOOTHCURVE")
         split.prop(context.window_manager.mio3ce, "clamp", text="")
 
-
 class MIO3_PG_flex(PropertyGroup):
     control_num: IntProperty(name="Control Points", description="[Ctrl] + Wheel", default=3, min=2, max=30)
     clamp: FloatProperty(name="Clamp", description="[Ctrl] + [Shift] + Wheel", default=1.2, min=0, max=2, step=5)
     hide_ui: BoolProperty(name="Hide UI", default=False, options={"SKIP_SAVE"})
 
 
+class MIO3_PT_flex_options_popover(Panel):
+    bl_label = "Options"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "WINDOW"
+
+    def draw(self, context):
+        layout = self.layout
+        prefs = get_preferences()
+        split = layout.split(factor=0.34, align=True)
+        split.label(text="Category")
+        split.prop(prefs, "category", text="")
+
 classes = [
     MIO3_PG_flex,
     MIO3_PT_flex,
+    MIO3_PT_flex_options_popover,
 ]
 
 
