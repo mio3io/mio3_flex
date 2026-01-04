@@ -11,6 +11,13 @@ translation_dict = {
         ("*", "Confirmed"): "確定しました",
         ("*", "Auto Density"): "密度を自動調整",
         ("*", "Automatically adjust control point distribution based on edge density"): "エッジの密度に基づいて制御点の分布を自動的に調整します",
+        ("*", "Original Edge"): "元のエッジ",
+        ("*", "Show Original Edge"): "元のエッジを表示",
+        ("*", "Display the original edge loop for reference"): "参照のために元のエッジループを表示します",
+        ("*", "Right Click Action"): "右クリックの操作",
+        ("*", "Choose the action for the right mouse button"): "右マウスボタンの操作を選択します",
+        ("*", "Use right mouse button to confirm actions"): "右クリックで操作を確定します",
+        ("*", "Use right mouse button to cancel actions"): "右クリックで操作をキャンセルします",
 
         # GPU GUI
         ("*", "🐻Tips"): "🐻Tips",

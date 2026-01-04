@@ -3,11 +3,11 @@ from mathutils import Vector
 from collections import deque
 
 # 押したときにデフォの処理をするキー "WHEELINMOUSE", "WHEELOUTMOUSE",
-PASS_THROUGH_KEY = {
+PASS_THROUGH_KEY = (
     "NUMPAD_0", "NUMPAD_1", "NUMPAD_3", "NUMPAD_4", "NUMPAD_5", "NUMPAD_7", "NUMPAD_9",
     "MOUSEMOVE", "INBETWEEN_MOUSEMOVE", "MIDDLEMOUSE", "WHEELUPMOUSE", "WHEELDOWNMOUSE", 
     "NUMPAD_PERIOD", "NUMPAD_SLASH",
-} # fmt: skip
+ ) # fmt: skip
 
 
 def is_closed_loop(vertices):

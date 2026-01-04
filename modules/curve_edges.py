@@ -2,7 +2,7 @@ import bpy
 import gpu
 import blf
 import bmesh
-from mathutils import Vector, kdtree, Color
+from mathutils import Vector, kdtree
 from bpy.types import Operator, SpaceView3D
 from bpy.props import FloatProperty, IntProperty
 from gpu_extras.batch import batch_for_shader
@@ -33,15 +33,20 @@ def get_guide_lines(base_x=430, base_y=30, line_height=26):
     return [(base_x, base_y + i * line_height, tt_iface(text)) for i, text in enumerate(reversed(guide_lines))]
 
 
+def update_points(self, context):
+    context.window_manager.mio3ce.control_num = self.points
+
+
+def update_clamp(self, context):
+    context.window_manager.mio3ce.clamp = self.clamp
+
+
 class MESH_OT_mio3_curve_edges_base(Operator):
     bl_label = "Edge Path"
     bl_options = {"REGISTER", "UNDO"}
 
-    def update_points(self, context):
-        context.window_manager.mio3ce.control_num = self.points
-
-    points: IntProperty(name="Points", default=2, min=2, max=30, update=update_points, options={"HIDDEN"})
-    clamp: FloatProperty(name="Clamp", default=1, min=-5, max=5, options={"HIDDEN"})
+    points: IntProperty(name="Points", default=3, min=2, max=30, update=update_points, options={"HIDDEN"})
+    clamp: FloatProperty(name="Roundness", default=1, min=1, max=2, update=update_clamp, options={"HIDDEN"})
 
     _segments = 10  # 分割数
     _hit_radius = 16  # クリックしたときのヒット半径
@@ -66,8 +71,14 @@ class MESH_OT_mio3_curve_edges_base(Operator):
     _skip_finish = False  # 確定をスキップするフラグ
     _store_points = []
 
-    _pref = None
+    _prefs = None
     _matrix_world = None
+    _current_area = None
+
+    _spline_shader = None
+    _points_shader = None
+    _poly_shader = None
+    _rect_shader = None
 
     _handle_3d = None
     _handle_2d = None
@@ -125,13 +136,14 @@ class MESH_OT_mio3_curve_edges_base(Operator):
 
             is_closed = is_closed_loop(ordered_verts)
             world_co = [world_matrix @ v.co for v in ordered_verts]
-            control_points = calc_control_points(world_co, self.points, is_closed, self._pref.use_density)
+            control_points = calc_control_points(world_co, self.points, is_closed, self._prefs.use_density)
             spline_points = calc_spline_points(control_points, self._segments, is_closed, self.clamp)
             vertex_params = calc_vertex_params(world_co, spline_points, is_closed)
             spline_datas.append(
                 {
                     "vertex_params": vertex_params,
                     "local_co": [v.co.copy() for v in ordered_verts],
+                    "world_co": world_co,
                     "vert_indices": [v.index for v in ordered_verts],
                     "control_points": control_points,
                     "spline_points": spline_points,
@@ -154,6 +166,7 @@ class MESH_OT_mio3_curve_edges_base(Operator):
                 self._verts_mirror_map[v.index] = bm.verts[co_find[1]].index
 
         self._spline_datas = spline_datas
+        bm.free()
         return len(spline_datas)
 
     def update_vertices(self, context):
@@ -269,20 +282,20 @@ class MESH_OT_mio3_curve_edges_base(Operator):
 
         obj = context.active_object
         bm = bmesh.from_edit_mesh(obj.data)
-        world_matrix = self._matrix_world
 
         self._selected_points = []
         self._active_point_index = -1
 
         for spline_idx, spline in enumerate(self._spline_datas):
             is_closed = spline["is_closed"]
-            world_co = [world_matrix @ bm.verts[i].co for i in spline["vert_indices"]]
-            spline["control_points"] = calc_control_points(world_co, new_num, is_closed, self._pref.use_density)
+            world_co = [self._matrix_world @ bm.verts[i].co for i in spline["vert_indices"]]
+            spline["control_points"] = calc_control_points(world_co, new_num, is_closed, self._prefs.use_density)
             spline["spline_points"] = calc_spline_points(
                 spline["control_points"], self._segments, is_closed, self.clamp
             )
             spline["vertex_params"] = calc_vertex_params(world_co, spline["spline_points"], is_closed)
 
+        bm.free()
         self.create_spline_mirror_map(self._spline_datas)
         self.update_vertices(context)
 
@@ -396,16 +409,14 @@ class MESH_OT_mio3_curve_edges_base(Operator):
         bm = bmesh.from_edit_mesh(obj.data)
 
         control_num = context.window_manager.mio3ce.control_num
-        use_mirror = self._x_mirror
         mirror_map = self._verts_mirror_map
-        world_matrix = self._matrix_world
 
         for spline in self._spline_datas:
             local_co = spline["local_co"]
-            world_co = [world_matrix @ co for co in local_co]
+            world_co = [self._matrix_world @ co for co in local_co]
             vert_indices = spline["vert_indices"]
             is_closed = spline["is_closed"]
-            spline["control_points"] = calc_control_points(world_co, control_num, is_closed, self._pref.use_density)
+            spline["control_points"] = calc_control_points(world_co, control_num, is_closed, self._prefs.use_density)
             spline["spline_points"] = calc_spline_points(
                 spline["control_points"], self._segments, is_closed, self.clamp
             )
@@ -417,7 +428,7 @@ class MESH_OT_mio3_curve_edges_base(Operator):
                 original = local_co[i]
                 bm.verts[vert_index].co = original
                 # Xミラー
-                if use_mirror and vert_index in mirror_map:
+                if self._x_mirror and vert_index in mirror_map:
                     mirror_idx = mirror_map[vert_index]
                     if mirror_idx < len(bm.verts):
                         bm.verts[mirror_idx].co = Vector((-original.x, original.y, original.z))
@@ -554,33 +565,45 @@ class MESH_OT_mio3_curve_edges_base(Operator):
 
     @staticmethod
     def draw_3d(self, context, props):
-        if props.hide_ui:
+        if self._current_area is None or self._current_area != context.area or props.hide_ui:
             return
 
-        p_default = self._pref.point_size_default
-        p_selected = self._pref.point_size_selected
-        p_active = self._pref.point_size_active
+        p_default = self._prefs.point_size_default
+        p_selected = self._prefs.point_size_selected
+        p_active = self._prefs.point_size_active
+        original_edge_color = self._prefs.col_edge_original
+        spline_shader = self._spline_shader
+        points_shader = self._points_shader
 
         if ver4_5:
-            spline_shader = gpu.shader.from_builtin("POLYLINE_UNIFORM_COLOR")
-            points_shader = gpu.shader.from_builtin("POINT_UNIFORM_COLOR")
             spline_shader.uniform_float("viewportSize", gpu.state.viewport_get()[2:])
+            spline_shader.uniform_float("lineWidth", 0.2)
+        else:
+            gpu.state.line_width_set(1)
+
+        # 元のエッジの描画
+        if self._prefs.show_original_edge:
+            for i, spline in enumerate(self._spline_datas):
+                loop_type = "LINE_LOOP" if spline["is_closed"] else "LINE_STRIP"
+                original_edge_batch = batch_for_shader(spline_shader, loop_type, {"pos": spline["world_co"]})
+                spline_shader.bind()
+                spline_shader.uniform_float("color", original_edge_color)
+                original_edge_batch.draw(spline_shader)
+
+        if ver4_5:
             spline_shader.uniform_float("lineWidth", 1.0)
         else:
-            spline_shader = gpu.shader.from_builtin("UNIFORM_COLOR")
-            points_shader = gpu.shader.from_builtin("UNIFORM_COLOR")
-            gpu.state.line_width_set(2)
+            gpu.state.line_width_set(2.0)
 
         for i, spline in enumerate(self._spline_datas):
             is_active_spline = i == self._active_spline_index
             # スプラインの描画
-            spline_color = self._pref.col_spline_active if is_active_spline else self._pref.col_spline_default
+            spline_color = self._prefs.col_spline_active if is_active_spline else self._prefs.col_spline_default
             if spline["is_closed"]:
                 batch = batch_for_shader(spline_shader, "LINE_LOOP", {"pos": spline["spline_points"]})
             else:
                 batch = batch_for_shader(spline_shader, "LINE_STRIP", {"pos": spline["spline_points"]})
             spline_shader.bind()
-            # srgb = Color(spline_color[:3]).from_scene_linear_to_srgb()
             spline_shader.uniform_float("color", spline_color)
             batch.draw(spline_shader)
             # 制御点の描画
@@ -588,15 +611,14 @@ class MESH_OT_mio3_curve_edges_base(Operator):
                 is_active = j == self._active_point_index and is_active_spline
                 is_selected = (i, j) in self._selected_points
                 if is_active:
-                    color = self._pref.col_point_active
+                    color = self._prefs.col_point_active
                 elif is_selected:
-                    color = self._pref.col_point_selected
+                    color = self._prefs.col_point_selected
                 else:
-                    color = self._pref.col_point_default
-                points_batch = batch_for_shader(points_shader, "POINTS", {"pos": [point]})
+                    color = self._prefs.col_point_default
                 gpu.state.point_size_set(p_active if is_active else (p_selected if is_selected else p_default))
+                points_batch = batch_for_shader(points_shader, "POINTS", {"pos": [point]})
                 points_shader.bind()
-                # srgb = Color(color[:3]).from_scene_linear_to_srgb()
                 points_shader.uniform_float("color", color)
                 points_batch.draw(points_shader)
 
@@ -611,62 +633,75 @@ class MESH_OT_mio3_curve_edges_base(Operator):
 
     @staticmethod
     def draw_2d(self, context, props):
+        if self._current_area is None or self._current_area != context.area:
+            return
+
+        # ヘルプの描画
+        poly_shader = self._poly_shader
         font_id = 0
         blf.size(font_id, 16)
         blf.color(font_id, 1.0, 1.0, 1.0, 1.0)
-        gpu.state.blend_set("ALPHA")
-        shader_box = gpu.shader.from_builtin("UNIFORM_COLOR")
-        shader_box.uniform_float("color", (0.0, 0.0, 0.0, 0.7))
-        shader_box.bind()
+        poly_shader.uniform_float("color", (0.0, 0.0, 0.0, 0.7))
+        poly_shader.bind()
 
         if props.hide_ui:
             x, y, width, height = 420, 10, 90, 40
-            batch = batch_for_shader(shader_box, "TRIS", {"pos": self.rect_tris(x, y, width, height)})
-            batch.draw(shader_box)
+            batch = batch_for_shader(poly_shader, "TRIS", {"pos": self.rect_tris(x, y, width, height)})
+            gpu.state.blend_set("ALPHA")
+            batch.draw(poly_shader)
+            gpu.state.blend_set("NONE")
             blf.position(font_id, 430, 25, 0)
             blf.draw(font_id, "[H] Show")
-            gpu.state.blend_set("NONE")
             return
 
         x, y, width, height = 420, 10, 570, 100
-        batch = batch_for_shader(shader_box, "TRIS", {"pos": self.rect_tris(x, y, width, height)})
-        batch.draw(shader_box)
+        batch = batch_for_shader(poly_shader, "TRIS", {"pos": self.rect_tris(x, y, width, height)})
+        gpu.state.blend_set("ALPHA")
+        batch.draw(poly_shader)
         gpu.state.blend_set("NONE")
 
         for x, y, text in self._text_lines:
             blf.position(font_id, x, y, 0)
             blf.draw(font_id, text)
 
+        # Mアイコンの描画
+        poly_shader.uniform_float("color", (0.82, 0.36, 0.40, 1) if self._x_mirror else (0.4, 0.4, 0.4, 1))
+        x, y, width, height = 950, 120, 30, 30
+        batch = batch_for_shader(poly_shader, "TRIS", {"pos": self.rect_tris(x, y, width, height)})
+        batch.draw(poly_shader)
+        blf.position(font_id, 956, 127, 0)
+        blf.size(font_id, 20)
+        blf.draw(font_id, "M")
+
         if not self._is_rect_mode:
             return
 
+        # 矩形選択の描画
+        rect_shader = self._rect_shader
         x1, y1 = self._drag_start_mouse
         x2, y2 = self._drag_end_mouse
         vertices = [(x1, y1), (x2, y1), (x2, y2), (x1, y2)]
-        if ver4_5:
-            shader = gpu.shader.from_builtin("POLYLINE_UNIFORM_COLOR")
-        else:
-            shader = gpu.shader.from_builtin("UNIFORM_COLOR")
-        batch = batch_for_shader(shader, "LINE_LOOP", {"pos": vertices})
-        shader.bind()
-        shader.uniform_float("color", (1.0, 1.0, 1.0, 1.0))
-        batch.draw(shader)
+        batch = batch_for_shader(rect_shader, "LINE_LOOP", {"pos": vertices})
+        rect_shader.bind()
+        rect_shader.uniform_float("color", (0.8, 0.8, 0.8, 1.0))
+        batch.draw(rect_shader)
 
     def invoke(self, context, event):
         cls = self.__class__
-
-        pref = get_preferences()
         cls.remove_handler()
-        obj = context.active_object
 
-        self._pref = pref
-        self._matrix_world = obj.matrix_world
+        prefs = get_preferences()
 
-        self._x_mirror = obj.data.use_mirror_x
         self.points = context.window_manager.mio3ce.control_num
         self.clamp = context.window_manager.mio3ce.clamp
-        context.window_manager.mio3ce.hide_ui = False
+
+        obj = context.active_object
+        self._prefs = prefs
+        self._matrix_world = obj.matrix_world
+        self._x_mirror = obj.data.use_mirror_x
         self._text_lines = get_guide_lines()
+        self._current_area = context.area
+        context.window_manager.mio3ce.hide_ui = False
 
         if not self.create_spline_loops(context):
             return self.cancel_deform(context)
@@ -676,6 +711,17 @@ class MESH_OT_mio3_curve_edges_base(Operator):
         props = context.window_manager.mio3ce
         cls._handle_3d = SpaceView3D.draw_handler_add(self.draw_3d, (self, context, props), "WINDOW", "POST_VIEW")
         cls._handle_2d = SpaceView3D.draw_handler_add(self.draw_2d, (self, context, props), "WINDOW", "POST_PIXEL")
+
+        if ver4_5:
+            self._points_shader = gpu.shader.from_builtin("POINT_UNIFORM_COLOR")
+            self._spline_shader = gpu.shader.from_builtin("POLYLINE_UNIFORM_COLOR")
+            self._rect_shader = self._spline_shader
+            self._poly_shader = gpu.shader.from_builtin("UNIFORM_COLOR")
+        else:
+            self._spline_shader = gpu.shader.from_builtin("UNIFORM_COLOR")
+            self._points_shader = self._spline_shader
+            self._rect_shader = self._spline_shader
+            self._poly_shader = self._spline_shader
 
         context.window_manager.modal_handler_add(self)
         return {"RUNNING_MODAL"}
@@ -755,7 +801,7 @@ class MESH_OT_mio3_curve_edges_base(Operator):
             elif self._drag_start_mouse and not self._is_drag_mode:
                 dx = mouse_x - self._drag_start_mouse[0]
                 dy = mouse_y - self._drag_start_mouse[1]
-                if dx * dx + dy * dy > 3**2:  # (n)px以上動いたらドラッグ開始
+                if dx * dx + dy * dy > 2**2:  # (n)px以上動いたらドラッグ開始
                     # 🍏ドラッグ開始
                     self._is_drag_mode = True
                     self.store_points()
@@ -778,14 +824,14 @@ class MESH_OT_mio3_curve_edges_base(Operator):
                 self.store_points()
 
         # ホイール：制御点の数を変更
-        elif event.type in {"WHEELUPMOUSE", "WHEELDOWNMOUSE"} and event.shift:
+        elif event.type in ("WHEELUPMOUSE", "WHEELDOWNMOUSE") and event.shift:
             if self._is_drag_mode or self._is_grab_mode:
                 self.end_move_mode("ホイール時のキャンセル")
 
             if event.type == "WHEELUPMOUSE":
                 new_num = min(30, self.points + 1)
             else:
-                new_num = max(3, self.points - 1)
+                new_num = max(2, self.points - 1)
             if new_num != self.points:
                 if event.alt:
                     self.reset_deform(context)
@@ -800,27 +846,30 @@ class MESH_OT_mio3_curve_edges_base(Operator):
                 self.end_move_mode("移動キャンセル")
                 redraw_3d_views(context)
             else:
-                return self.finish_deform(context)
+                if self._prefs.right_click_action == "CONFIRM":
+                    return self.finish_deform(context)
+                else:
+                    self.reset_deform(context)
+                    return self.cancel_deform(context)
 
         # ↑↓←→キー clumpの数値を変更0～2
-        elif event.type in {"UP_ARROW", "DOWN_ARROW"} and event.value == "PRESS":
+        elif event.type in ("UP_ARROW", "DOWN_ARROW") and event.value == "PRESS":
             if event.type == "UP_ARROW":
                 self.clamp = min(2.0, self.clamp + 0.1)
             else:
-                self.clamp = max(0.0, self.clamp - 0.1)
-            context.window_manager.mio3ce.clamp = self.clamp
+                self.clamp = max(1.0, self.clamp - 0.1)
             self.refresh_deform(context)
             redraw_3d_views(context)
             return {"RUNNING_MODAL"}
 
-        elif event.type in {"X", "Y", "Z"} and event.value == "PRESS":
+        elif event.type in ("X", "Y", "Z") and event.value == "PRESS":
             if self._is_grab_mode or self._is_drag_mode:
                 if self._axis != event.type:
                     self.restore_points(context)
                     redraw_3d_views(context)
                 self._axis = event.type
 
-        elif event.type in {"RET", "NUMPAD_ENTER", "TAB"}:
+        elif event.type in ("RET", "NUMPAD_ENTER", "TAB"):
             if self._skip_finish:
                 self._skip_finish = False
             else:
@@ -839,6 +888,7 @@ class MESH_OT_mio3_curve_edges_base(Operator):
 
         elif event.type == "M" and event.value == "PRESS":
             self._x_mirror = not self._x_mirror
+            context.area.tag_redraw()
 
         elif event.type == "H" and event.value == "PRESS":
             self.toggle_display(context)
@@ -886,19 +936,18 @@ class MESH_OT_mio3_curve_edges_quick(MESH_OT_mio3_curve_edges_base):
 
     iterations: IntProperty(name="Iterations", default=1, min=1, max=10)
 
-    def update_points(self, context):
-        context.window_manager.mio3ce.control_num = self.points
-
-    points: IntProperty(name="Points", default=2, min=2, max=30, update=update_points)
+    points: IntProperty(name="Points", default=3, min=2, max=30, update=update_points)
+    clamp: FloatProperty(name="Roundness", default=1, min=1, max=2, update=update_clamp)
 
     def invoke(self, context, event):
-        self._pref = get_preferences()
         return self.execute(context)
 
     def execute(self, context):
+        self._prefs = get_preferences()
+        self.points = context.window_manager.mio3ce.control_num
+        self.clamp = context.window_manager.mio3ce.clamp
         self._x_mirror = context.active_object.data.use_mirror_x
         self._matrix_world = context.active_object.matrix_world
-        self.points = context.window_manager.mio3ce.control_num
         for i in range(self.iterations):
             if self.create_spline_loops(context):
                 self.update_vertices(context)

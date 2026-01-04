@@ -36,9 +36,10 @@ class MIO3_PT_flex(Panel):
         split.label(text="Roundness", icon="SMOOTHCURVE")
         split.prop(context.window_manager.mio3ce, "clamp", text="")
 
+
 class MIO3_PG_flex(PropertyGroup):
     control_num: IntProperty(name="Control Points", description="[Ctrl] + Wheel", default=3, min=2, max=30)
-    clamp: FloatProperty(name="Clamp", description="[Ctrl] + [Shift] + Wheel", default=1.0, min=0, max=2, step=5)
+    clamp: FloatProperty(name="Clamp", description="[Ctrl] + [Shift] + Wheel", default=1.0, min=1, max=2, step=5)
     hide_ui: BoolProperty(name="Hide UI", default=False, options={"SKIP_SAVE"})
 
 
@@ -49,14 +50,15 @@ class MIO3_PT_flex_options_popover(Panel):
 
     def draw(self, context):
         layout = self.layout
+        layout.ui_units_x = 12
         prefs = get_preferences()
-        split = layout.split(factor=0.3, align=True)
-        split.label(text="Category")
-        split.prop(prefs, "category", text="")
-        split = layout.split(factor=0.3, align=True)
-        split.label(text="")
-        split.prop(prefs, "use_density")
-        
+        col = layout.column()
+        col.use_property_split = True
+        col.use_property_decorate = False
+        col.prop(prefs, "category", text="Category")
+        col.prop(prefs, "use_density", text="Auto Density")
+        col.prop(prefs, "show_original_edge", text="Show Original Edge")
+
 
 classes = [
     MIO3_PG_flex,
