@@ -1,13 +1,12 @@
 schema_version = "1.0.0"
-id = "mio3_mesh_tools"
-name = "Mio3 Mesh Tools"
-version = "0.13.0"
-tagline = "Curve Edges, and Mesh Tools"
+id = "mio3_flex"
+name = "Mio3 Flex"
+version = "1.0.0"
+tagline = "Deforms an edge loop with a spline curve"
 maintainer = "Mio"
 type = "add-on"
 tags = ["Mesh"]
 blender_version_min = "4.2.0"
 license = ["SPDX:GPL-3.0-or-later"]
-website = "https://github.com/mio3io/mio3_mesh_tools"
-copyright = ["2025 Mio"]
-
+website = "https://github.com/mio3io/mio3_flex"
+copyright = ["2026 Mio"]
