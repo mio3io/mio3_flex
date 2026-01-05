@@ -10,7 +10,7 @@ https://addon.mio3io.com/
 
 3D View > Sidebar > Mio3
 
-## How to use
+## Usage
 
 Select the edge loop you want to edit and click "Mio3 Flow" in the sidebar → "Path Deform".
 If multiple edge loops are selected, an independent path is created for each one.

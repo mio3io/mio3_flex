@@ -4,6 +4,8 @@ from bpy.props import BoolProperty, FloatProperty, IntProperty, PointerProperty
 from .utils import is_local_obj, check_unregister, check_register
 from .globals import get_preferences
 
+ver5 = bpy.app.version >= (5, 0, 0)
+
 
 class MIO3_PT_flex(Panel):
     bl_label = "Mio3 Flex"
@@ -18,7 +20,8 @@ class MIO3_PT_flex(Panel):
 
     def draw_header_preset(self, context):
         layout = self.layout
-        layout.emboss = "NONE"
+        if ver5:
+            layout.emboss = "NONE_OR_STATUS"
         layout.popover("MIO3_PT_flex_options_popover", text="")
         layout.separator(factor=2.2)
 
