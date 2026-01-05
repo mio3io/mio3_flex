@@ -1,4 +1,4 @@
-# Mio3 Flex (EN)
+# Mio3 Flex (En)
 
 A Blender add-on that lets you reshape edge loops into freeform curves by manipulating a path.
 
@@ -15,9 +15,9 @@ https://addon.mio3io.com/
 Select the edge loop you want to edit and click "Mio3 Flow" in the sidebar → "Path Deform".
 If multiple edge loops are selected, an independent path is created for each one.
 
-## Controls
+### Controls
 
--   Click on empty space / Right-click / Enter / Tab: Confirm deformation
+-   Click on empty space / Enter / Tab: Confirm deformation
 -   Drag on empty space / Shift + click a control point: Multi-select
 -   Drag a control point: Move the control point
 -   G: Move selected control points
@@ -31,7 +31,7 @@ If multiple edge loops are selected, an independent path is created for each one
 -   H: Hide the spline
 -   ESC: Cancel deformation
 
-# Mio3 Flex (JA)
+# Mio3 Flex (Ja)
 
 パスを操作してエッジループの形を自由な曲線に整えられる Blender アドオン。
 
@@ -50,7 +50,7 @@ https://addon.mio3io.com/
 
 ### 操作方法
 
--   何もない場所をクリック / 右クリック / Enter / Tab：変形を確定
+-   何もない場所をクリック / Enter / Tab：変形を確定
 -   何もない場所をドラッグ / Shift + 制御点をクリック：複数選択
 -   制御点をドラッグ：制御点を移動
 -   G：選択された制御点を移動
