@@ -19,6 +19,8 @@ translation_dict = {
         ("*", "Use right mouse button to confirm actions"): "右クリックで操作を確定します",
         ("*", "Use right mouse button to cancel actions"): "右クリックで操作をキャンセルします",
 
+        ("*", "No valid edge loops found. Select at least 3 connected edges."): "有効なエッジループが見つかりません。少なくとも3つの連続したエッジを選択してください。",
+
         # GPU GUI
         ("*", "🐻Tips"): "🐻Tips",
         ("*", "[Click] Confirm"): "[Click] 確定",

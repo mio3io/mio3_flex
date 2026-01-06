@@ -704,6 +704,7 @@ class MESH_OT_mio3_curve_edges_base(Operator):
         context.window_manager.mio3ce.hide_ui = False
 
         if not self.create_spline_loops(context):
+            self.report({"WARNING"}, "No valid edge loops found. Select at least 3 connected edges.")
             return self.cancel_deform(context)
 
         self.update_vertices(context)
