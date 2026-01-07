@@ -1,10 +1,10 @@
 # Mio3 Flex (En)
 
-A Blender add-on that lets you reshape edge loops into freeform curves by manipulating a path.
+A Blender add-on that reshape edge loops into smooth, freeform curves using a controllable path.
 
-## Download
+## Install (from Blender Extensions)
 
-https://addon.mio3io.com/
+https://extensions.blender.org/add-ons/mio3-flex/
 
 ## Location
 
@@ -12,32 +12,32 @@ https://addon.mio3io.com/
 
 ## Usage
 
-Select the edge loop you want to edit and click "Mio3 Flow" in the sidebar → "Path Deform".
+Select the edge loop you want to edit and click "Mio3 Flex" in the sidebar → "Path Deform".
 If multiple edge loops are selected, an independent path is created for each one.
 
 ### Controls
 
--   Click on empty space / Enter / Tab: Confirm deformation
--   Drag on empty space / Shift + click a control point: Multi-select
--   Drag a control point: Move the control point
--   G: Move selected control points
--   Ctrl + click on the spline: Add or remove a control point
--   Del: Delete selected control points
--   Shift + mouse wheel: Change the number of control points
--   ↑ / ↓: Adjust curve strength
--   X / Y / Z: Lock the movement axis
--   M: Toggle mirror mode
--   R: Reset deformation
--   H: Hide the spline
--   ESC: Cancel deformation
+-   `Click on empty space` / `Enter` / `Tab`: Confirm deformation
+-   `Drag on empty space` / `Shift + click a control point`: Multi-select
+-   `Drag a control point`: Move the control point
+-   `G`: Move selected control points
+-   `Ctrl + click on the spline`: Add or remove a control point
+-   `Del`: Delete selected control points
+-   `Shift + mouse wheel`: Change the number of control points
+-   `↑` / `↓`: Adjust curve strength
+-   `X` / `Y` / `Z`: Lock the movement axis
+-   `M`: Toggle mirror mode
+-   `R`: Reset deformation
+-   `H`: Hide the spline
+-   `ESC`: Cancel deformation
 
 # Mio3 Flex (Ja)
 
-パスを操作してエッジループの形を自由な曲線に整えられる Blender アドオン。
+操作可能なパスを使用してエッジループを滑らかで自由な曲線に再形成する Blender アドオン。
 
-## ダウンロード
+## インストール (from Blender Extensions)
 
-https://addon.mio3io.com/
+https://extensions.blender.org/add-ons/mio3-flex/
 
 ## 場所
 
@@ -45,7 +45,7 @@ https://addon.mio3io.com/
 
 ## 使い方
 
-編集したいエッジループを選択してサイドバー「Mio3 Flow」→「パスで変形」をクリックします。
+編集したいエッジループを選択してサイドバー「Mio3 Flex」→「パスで変形」をクリックします。
 エッジループを複数選択している場合はそれぞれ独立したパスが作成されます。
 
 ### 操作方法
