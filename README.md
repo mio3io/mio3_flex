@@ -23,7 +23,8 @@ If multiple edge loops are selected, an independent path is created for each one
 -   `G`: Move selected control points
 -   `Ctrl + click on the spline`: Add or remove a control point
 -   `Del`: Delete selected control points
--   `Shift + mouse wheel`: Change the number of control points
+-   `Shift + mouse wheel`: Change the number of control points on the current shape
+-   `Alt + mouse wheel`: Change the number of control points on the original shape
 -   `↑` / `↓`: Adjust curve strength
 -   `X` / `Y` / `Z`: Lock the movement axis
 -   `M`: Toggle mirror mode
@@ -56,7 +57,8 @@ https://extensions.blender.org/add-ons/mio3-flex/
 -   G：選択された制御点を移動
 -   Ctrl + スプラインをクリック：制御点を追加または削除
 -   Del：選択された制御点を削除
--   Shift + ホイール：制御点数を変更
+-   Shift + ホイール：現在の形状で制御点の数を変更
+-   Alt + ホイール：元の形状で制御点の数を変更
 -   ↑ / ↓：丸みの強さを変更
 -   X / Y / Z：移動する軸を固定
 -   M：ミラー操作の切り替え

@@ -716,13 +716,13 @@ class MESH_OT_mio3_curve_edges_base(Operator):
         if ver4_5:
             self._points_shader = gpu.shader.from_builtin("POINT_UNIFORM_COLOR")
             self._spline_shader = gpu.shader.from_builtin("POLYLINE_UNIFORM_COLOR")
-            self._rect_shader = self._spline_shader
+            self._rect_shader = gpu.shader.from_builtin("POLYLINE_UNIFORM_COLOR")
             self._poly_shader = gpu.shader.from_builtin("UNIFORM_COLOR")
         else:
             self._spline_shader = gpu.shader.from_builtin("UNIFORM_COLOR")
             self._points_shader = self._spline_shader
-            self._rect_shader = self._spline_shader
-            self._poly_shader = self._spline_shader
+            self._rect_shader = gpu.shader.from_builtin("UNIFORM_COLOR")
+            self._poly_shader = self._rect_shader
 
         context.window_manager.modal_handler_add(self)
         return {"RUNNING_MODAL"}
@@ -825,7 +825,7 @@ class MESH_OT_mio3_curve_edges_base(Operator):
                 self.store_points()
 
         # ホイール：制御点の数を変更
-        elif event.type in ("WHEELUPMOUSE", "WHEELDOWNMOUSE") and event.shift:
+        elif event.type in ("WHEELUPMOUSE", "WHEELDOWNMOUSE") and (event.shift or event.alt):
             if self._is_drag_mode or self._is_grab_mode:
                 self.end_move_mode("ホイール時のキャンセル")
 
@@ -853,7 +853,7 @@ class MESH_OT_mio3_curve_edges_base(Operator):
                     self.reset_deform(context)
                     return self.cancel_deform(context)
 
-        # ↑↓←→キー clumpの数値を変更0～2
+        # ↑↓←キー clumpの数値を変更1～2
         elif event.type in ("UP_ARROW", "DOWN_ARROW") and event.value == "PRESS":
             if event.type == "UP_ARROW":
                 self.clamp = min(2.0, self.clamp + 0.1)
