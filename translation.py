@@ -24,8 +24,8 @@ translation_dict = {
         # GPU GUI
         ("*", "🐻Tips"): "🐻Tips",
         ("*", "[Click] Confirm"): "[Click] 確定",
-        ("*", "[Shift+Wheel] Control Points [Ctrl+Click] Add or Delete [↑↓] Roundness"): "[Shift+ホイール] ポイント数 [Ctrl+クリック] 追加or削除 [↑↓] 曲線の強さ",
-        ("*", "[R] Reset Deform [M] Mirror Toggle [H] Hide Path"): "[R] 変形リセット [M] ミラー切り替え [H] パスを非表示",
+        ("*", "[Shift+Wheel] [Alt+Wheel] Control Points [Ctrl+Click] Add or Delete"): "[Shift+Wheel] [Alt+Wheel] ポイント数 [Ctrl+Click] 追加 or 削除",
+        ("*", "[R] Reset Deform [M] Mirror Toggle [H] Hide Path [↑↓] Roundness"): "[R] 変形リセット [M] ミラー切り替え [H] パスを非表示 [↑↓] 曲線の強さ",
     }
 }  # fmt: skip
 

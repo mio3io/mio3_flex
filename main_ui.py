@@ -41,9 +41,9 @@ class MIO3_PT_flex(Panel):
 
 
 class MIO3_PG_flex(PropertyGroup):
-    control_num: IntProperty(name="Control Points", description="[Ctrl] + Wheel", default=3, min=2, max=30)
-    clamp: FloatProperty(name="Clamp", description="[Ctrl] + [Shift] + Wheel", default=1.0, min=1, max=2, step=5)
-    hide_ui: BoolProperty(name="Hide UI", default=False, options={"SKIP_SAVE"})
+    control_num: IntProperty(name="Control Points", description="[Shift+Wheel] / [Alt+Wheel]", default=3, min=2, max=30)
+    clamp: FloatProperty(name="Clamp", description="[↑][↓]", default=1.0, min=1, max=2, step=5)
+    hide_ui: BoolProperty(name="Hide UI", default=False)
 
 
 class MIO3_PT_flex_options_popover(Panel):
