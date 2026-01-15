@@ -24,8 +24,8 @@ ver4_5 = bpy.app.version >= (4, 5, 0)
 
 guide_lines = [
     "🐻Tips",
-    "[Shift+Wheel] Control Points [Ctrl+Click] Add or Delete [↑↓] Roundness",
-    "[R] Reset Deform [M] Mirror Toggle [H] Hide Path",
+    "[Shift+Wheel] [Alt+Wheel] Control Points [Ctrl+Click] Add or Delete",
+    "[R] Reset Deform [M] Mirror Toggle [H] Hide Path [↑↓] Roundness",
 ]
 
 
@@ -141,12 +141,12 @@ class MESH_OT_mio3_curve_edges_base(Operator):
             vertex_params = calc_vertex_params(world_co, spline_points, is_closed)
             spline_datas.append(
                 {
-                    "vertex_params": vertex_params,
                     "local_co": [v.co.copy() for v in ordered_verts],
                     "world_co": world_co,
                     "vert_indices": [v.index for v in ordered_verts],
                     "control_points": control_points,
                     "spline_points": spline_points,
+                    "vertex_params": vertex_params,
                     "is_closed": is_closed,
                 }
             )
@@ -280,6 +280,7 @@ class MESH_OT_mio3_curve_edges_base(Operator):
         self.end_move_mode()
         self.points = new_num
 
+        clamp = self.clamp
         obj = context.active_object
         bm = bmesh.from_edit_mesh(obj.data)
 
@@ -290,9 +291,7 @@ class MESH_OT_mio3_curve_edges_base(Operator):
             is_closed = spline["is_closed"]
             world_co = [self._matrix_world @ bm.verts[i].co for i in spline["vert_indices"]]
             spline["control_points"] = calc_control_points(world_co, new_num, is_closed, self._prefs.use_density)
-            spline["spline_points"] = calc_spline_points(
-                spline["control_points"], self._segments, is_closed, self.clamp
-            )
+            spline["spline_points"] = calc_spline_points(spline["control_points"], self._segments, is_closed, clamp)
             spline["vertex_params"] = calc_vertex_params(world_co, spline["spline_points"], is_closed)
 
         bm.free()
@@ -410,16 +409,15 @@ class MESH_OT_mio3_curve_edges_base(Operator):
 
         control_num = context.window_manager.mio3ce.control_num
         mirror_map = self._verts_mirror_map
+        clamp = self.clamp
 
         for spline in self._spline_datas:
             local_co = spline["local_co"]
-            world_co = [self._matrix_world @ co for co in local_co]
+            world_co = spline["world_co"]
             vert_indices = spline["vert_indices"]
             is_closed = spline["is_closed"]
             spline["control_points"] = calc_control_points(world_co, control_num, is_closed, self._prefs.use_density)
-            spline["spline_points"] = calc_spline_points(
-                spline["control_points"], self._segments, is_closed, self.clamp
-            )
+            spline["spline_points"] = calc_spline_points(spline["control_points"], self._segments, is_closed, clamp)
             spline["vertex_params"] = calc_vertex_params(world_co, spline["spline_points"], is_closed)
 
             for i, vert_index in enumerate(vert_indices):
@@ -438,15 +436,11 @@ class MESH_OT_mio3_curve_edges_base(Operator):
 
     def refresh_deform(self, context):
         """スプラインを更新"""
-        obj = context.active_object
         for spline in self._spline_datas:
-            local_co = spline["local_co"]
-            world_co = [self._matrix_world @ co for co in local_co]
             is_closed = spline["is_closed"]
-            spline["spline_points"] = calc_spline_points(
-                spline["control_points"], self._segments, is_closed, self.clamp
-            )
-            spline["vertex_params"] = calc_vertex_params(world_co, spline["spline_points"], is_closed)
+            control_points = spline["control_points"]
+            spline["spline_points"] = calc_spline_points(control_points, self._segments, is_closed, self.clamp)
+            spline["vertex_params"] = calc_vertex_params(spline["world_co"], spline["spline_points"], is_closed)
 
         self.update_vertices(context)
         redraw_3d_views(context)

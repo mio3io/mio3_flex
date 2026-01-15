@@ -1,11 +1,6 @@
 import bpy
-from mathutils import Color
 
 DEBUG = False
-
-
-def is_local(obj):
-    return obj.library is None and obj.override_library is None
 
 
 def is_local_obj(obj):
@@ -18,7 +13,7 @@ def check_register(cls):
         try:
             bpy.utils.register_class(cls)
         except:
-            pass
+            print("Failed to register class: {}".format(cls.__name__))
 
 
 def check_unregister(cls):
@@ -27,7 +22,7 @@ def check_unregister(cls):
         try:
             bpy.utils.unregister_class(cls)
         except:
-            pass
+            print("Failed to unregister class: {}".format(cls.__name__))
 
 
 def redraw_3d_views(context):
@@ -36,6 +31,6 @@ def redraw_3d_views(context):
             area.tag_redraw()
 
 
-def linear_rgb_to_srgb(rgb):
-    return Color(rgb).from_scene_linear_to_srgb()
+# def linear_rgb_to_srgb(rgb):
+#     return Color(rgb).from_scene_linear_to_srgb()
 
