@@ -730,6 +730,8 @@ class MESH_OT_mio3_curve_edges_base(Operator):
             spline_idx, point_idx = self.get_closest_control_point(context, (mouse_x, mouse_y))
             point_key = (spline_idx, point_idx)
             if event.value == "PRESS":
+                if event.alt:
+                    return {"PASS_THROUGH"}
                 # Ctrl+クリック 制御点を追加・削除
                 if event.ctrl:
                     if spline_idx >= 0 and point_idx >= 0:
@@ -822,7 +824,6 @@ class MESH_OT_mio3_curve_edges_base(Operator):
         elif event.type in ("WHEELUPMOUSE", "WHEELDOWNMOUSE") and (event.shift or event.alt):
             if self._is_drag_mode or self._is_grab_mode:
                 self.end_move_mode("ホイール時のキャンセル")
-
             if event.type == "WHEELUPMOUSE":
                 new_num = min(30, self.points + 1)
             else:
@@ -834,6 +835,9 @@ class MESH_OT_mio3_curve_edges_base(Operator):
             return {"RUNNING_MODAL"}
 
         elif event.type == "RIGHTMOUSE" and event.value == "PRESS":
+            if event.alt:
+                return {"PASS_THROUGH"}
+
             # 移動モード中の右クリックはキャンセル
             if self._is_grab_mode or self._is_drag_mode or self._is_rect_mode:
                 self.restore_points(context)
